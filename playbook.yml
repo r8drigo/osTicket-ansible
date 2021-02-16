@@ -1,0 +1,5 @@
+- hosts: osticket
+  remote_user: rodrigo
+  become: yes
+  roles:
+    - server

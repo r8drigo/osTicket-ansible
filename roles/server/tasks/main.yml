@@ -1,0 +1,36 @@
+---
+- name: Install Docker
+  apt: name=docker state=latest update_cache=yes
+
+- name: Install Docker Python Client
+  pip: name=docker-py state=latest
+
+- name: Start Docker
+  service: name=docker state=started args='--storage-opt dm.basesize=20G'
+
+- name: Remove osticket container if already running
+  command: docker rm -f osticket
+  ignore_errors: yes
+
+- name: Remove previous osticket image
+  command: docker rmi -f osticket/osticket
+  ignore_errors: yes
+
+- name: Remove mysql container if already running
+  command: docker rm -f osticket_mysql
+  ignore_errors: yes
+
+- name: Remove previous mysql image
+  command: docker rmi -f mariadb
+  ignore_errors: yes
+
+#- name: Build image
+#  command: docker build -t app-img /home/ec2-user/app-container
+
+- name: Create container MySQL
+  command: docker run --name osticket_mysql -d -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_USER=osticket -e MYSQL_PASSWORD=secret -e MYSQL_DATABASE=osticket mariadb
+  ignore_errors: yes
+  
+- name: Create container osTicket
+  command: docker run --name osticket -d --link osticket_mysql:mysql -p 8080:80 osticket/osticket
+  ignore_errors: yes
